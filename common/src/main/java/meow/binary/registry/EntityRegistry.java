@@ -4,29 +4,38 @@ import dev.architectury.registry.level.entity.EntityAttributeRegistry;
 import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.RegistrySupplier;
 import meow.binary.FrogOverhaul;
-import meow.binary.entity.ExampleEntity;
+import meow.binary.data.FrogData;
+import meow.binary.entity.CustomFrog;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.frog.Frog;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class EntityRegistry {
     public final static DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(FrogOverhaul.MOD_ID, Registries.ENTITY_TYPE);
 
-    public static final RegistrySupplier<EntityType<ExampleEntity>> EXAMPLE_ENTITY = ENTITIES.register("example_entity", () -> EntityType.Builder.of(ExampleEntity::new, MobCategory.CREATURE)
-            .sized(0.5F, 0.5F).passengerAttachments(new Vec3(0.0, 0.375, -0.25)).clientTrackingRange(10)
-            .build("example_entity"));
+    public static final Map<FrogData<? extends CustomFrog>, RegistrySupplier<EntityType<? extends CustomFrog>>> FROG_MAP = new HashMap<>();
 
     public static void init() {
+        for (FrogData<? extends CustomFrog> data : FrogRegistry.FROGS.values()) {
+            RegistrySupplier<EntityType<? extends CustomFrog>> frog = ENTITIES.register(data.getId(), () -> EntityType.Builder.of(data.getFactory(), MobCategory.CREATURE)
+                    .sized(data.getWidth(), data.getHeight())
+                    .passengerAttachments(data.getPassengerAttachments())
+                    .clientTrackingRange(10)
+                    .build(data.getId()));
+
+            FROG_MAP.put(data, frog);
+        }
+
         ENTITIES.register();
         registerAttributes();
     }
 
     public static void registerAttributes() {
-        EntityAttributeRegistry.register(EXAMPLE_ENTITY, () -> Frog.createAttributes());
+        FROG_MAP.forEach((key, value) -> EntityAttributeRegistry.register(value, key.getAttributes()));
     }
 }

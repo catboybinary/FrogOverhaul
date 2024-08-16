@@ -11,6 +11,7 @@ public final class FrogOverhaulNeoForge {
     public FrogOverhaulNeoForge() {
         // Run our common setup.
         FrogOverhaul.init();
+
         if (FMLEnvironment.dist == Dist.CLIENT) {
             FrogOverhaulClient.init();
         }
